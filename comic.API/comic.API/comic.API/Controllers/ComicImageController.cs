@@ -20,19 +20,26 @@ namespace comic.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ComicImageDto>>> Get()
+        public async Task<ActionResult<ResponseDataDto<ComicImageDto>>> Get([FromQuery] string search, [FromQuery] int page, [FromQuery] int pageCount)
         {
-            return await _comicImageService.Get();
+            return await _comicImageService.Get(search, page, pageCount);
+        }
+
+        [Route("{id}")]
+        [HttpGet]
+        public async Task<ActionResult<ComicImageDto>> GetById([FromRoute] string id)
+        {
+            return await _comicImageService.GetById(id);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ComicImageDto>> Post(ComicImageDto comicImageDto)
+        public async Task<ActionResult<bool>> Post(ComicImageDto comicImageDto)
         {
             return await _comicImageService.Post(comicImageDto);
         }
 
         [HttpPut]
-        public async Task<ActionResult<ComicImageDto>> Put(ComicImageDto comicImageDto)
+        public async Task<ActionResult<bool>> Put(ComicImageDto comicImageDto)
         {
             return await _comicImageService.Put(comicImageDto);
         }

@@ -44,24 +44,91 @@ namespace comic.API.Services.Implementation
             }
         }
 
-        public async Task<List<ChapterDto>> Get()
+        public async Task<ResponseDataDto<ChapterDto>> Get(string search, int page = 1, int pageCount = 20)
         {
             _logger.LogInformation("Get Chapters API");
 
-            var categories = await _dataContext.Chapters.Select(c =>
+            var query = _dataContext.Chapters.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Description.Contains(search));
+            }
+
+            var count = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (pageCount < 1) pageCount = 20;
+
+            var chapters = await query.Select(c =>
             new ChapterDto
             {
                 Id = c.Id,
                 Description = c.Description,
                 Name = c.Name,
                 ComicId = c.ComicId,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
+            })
+            .Skip((page - 1) * pageCount)
+            .Take(pageCount)
+            .ToListAsync();
+            _logger.LogInformation("Get Chapters Successfully");
+
+            return new ResponseDataDto<ChapterDto>
+            {
+                Data = chapters,
+                Pagination = new PaginationDto
+                {
+                    Page = page,
+                    PageCount = pageCount,
+                    TotalCount = count
+                }
+
+            };
+        }
+
+        public async Task<List<ChapterDto>> GetByComicId(string comicId)
+        {
+            _logger.LogInformation("Get Chapters By ComicId API");
+
+            var query = _dataContext.Chapters.AsQueryable();
+
+            var chapters = await query.Where(x => x.ComicId.ToString() == comicId).Select(c =>
+            new ChapterDto
+            {
+                Id = c.Id,
+                Description = c.Description,
+                Name = c.Name,
+                ComicId = c.ComicId,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
             })
             .ToListAsync();
             _logger.LogInformation("Get Chapters Successfully");
 
-            return categories;
+            return chapters;
         }
 
+        public async Task<ChapterDto> GetById(string id)
+        {
+            _logger.LogInformation("GetById Chapter API");
+            var chapter = await _dataContext.FindAsync<Chapter>(new Guid(id));
+            if (chapter == null)
+            {
+                return null;
+            }
+            var chapterDto = new ChapterDto
+            {
+                Id = chapter.Id,
+                Name = chapter.Name,
+                Description = chapter.Description,
+                CreatedDate = chapter.CreatedDate,
+                UpdatedDate = chapter.UpdatedDate,
+                ComicId = chapter.ComicId
+            };
+            return chapterDto;
+        }
         public async Task<ChapterDto> Post(ChapterDto chapterDto)
         {
             _logger.LogInformation("Post Chapter API");

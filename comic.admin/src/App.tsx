@@ -1,57 +1,63 @@
 import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import './App.css';
+import AuthorizedLayout from './components/layouts/AuthorizedLayout';
+import { Switch, Route } from 'react-router-dom';
+import { ListCategoryPage, AddEditCategoryPage } from './features/category/pages';
+import { ListAuthorPage, AddEditAuthorPage } from './features/author/pages';
+import { ListComicPage, AddEditComicPage } from './features/comic/pages';
+import { ListChapterPage, AddEditChapterPage } from './features/chapter/pages';
+import { ListComicImagePage, AddEditComicImagePage } from './features/comicImage/pages';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
+    <AuthorizedLayout>
+      <Switch>
+        <Route path="/comicimage/add">
+          <AddEditComicImagePage />
+        </Route>
+        <Route path="/comicimage/edit/:id">
+          <AddEditComicImagePage />
+        </Route>
+        <Route path="/comicimage">
+          <ListComicImagePage />
+        </Route>
+        <Route path="/chapter/add">
+          <AddEditChapterPage />
+        </Route>
+        <Route path="/chapter/edit/:id">
+          <AddEditChapterPage />
+        </Route>
+        <Route path="/chapter">
+          <ListChapterPage />
+        </Route>
+        <Route path="/comic/add">
+          <AddEditComicPage />
+        </Route>
+        <Route path="/comic/edit/:id">
+          <AddEditComicPage />
+        </Route>
+        <Route path="/comic">
+          <ListComicPage />
+        </Route>
+        <Route path="/author/add">
+          <AddEditAuthorPage />
+        </Route>
+        <Route path="/author/edit/:id">
+          <AddEditAuthorPage />
+        </Route>
+        <Route path="/author">
+          <ListAuthorPage />
+        </Route>
+        <Route path="/category/add">
+          <AddEditCategoryPage />
+        </Route>
+        <Route path="/category/edit/:id">
+          <AddEditCategoryPage />
+        </Route>
+        <Route path="/category">
+          <ListCategoryPage />
+        </Route>
+      </Switch>
+    </AuthorizedLayout>
   );
 }
 

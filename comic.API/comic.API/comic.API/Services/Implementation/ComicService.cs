@@ -44,11 +44,22 @@ namespace comic.API.Services.Implementation
             }
         }
 
-        public async Task<List<ComicDto>> Get()
+        public async Task<ResponseDataDto<ComicDto>> Get(string search, int page = 1, int pageCount = 20)
         {
             _logger.LogInformation("Get Comics API");
+            var query = _dataContext.Comics.AsQueryable();
 
-            var categories = await _dataContext.Comics.Select(c =>
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Description.Contains(search));
+            }
+
+            var count = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (pageCount < 1) pageCount = 20;
+
+            var comics = await query.Select(c =>
             new ComicDto
             {
                 Id = c.Id,
@@ -56,11 +67,46 @@ namespace comic.API.Services.Implementation
                 Name = c.Name,
                 ThumbnailUrl = c.ThumbnailUrl,
                 CategoryId = c.CategoryId,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate,
             })
+            .Skip((page - 1) * pageCount)
+            .Take(pageCount)
             .ToListAsync();
             _logger.LogInformation("Get Comics Successfully");
 
-            return categories;
+            return new ResponseDataDto<ComicDto>
+            {
+                Data = comics,
+                Pagination = new PaginationDto
+                {
+                    Page = page,
+                    PageCount = pageCount,
+                    TotalCount = count
+                }
+
+            };
+        }
+
+        public async Task<ComicDto> GetById(string id)
+        {
+            _logger.LogInformation("GetById Comic API");
+            var comic = await _dataContext.FindAsync<Comic>(new Guid(id));
+            if (comic == null)
+            {
+                return null;
+            }
+            var comicDto = new ComicDto
+            {
+                Id = comic.Id,
+                Name = comic.Name,
+                Description = comic.Description,
+                CreatedDate = comic.CreatedDate,
+                UpdatedDate = comic.UpdatedDate,
+                CategoryId = comic.CategoryId,
+                ThumbnailUrl = comic.ThumbnailUrl,
+            };
+            return comicDto;
         }
 
         public async Task<ComicDto> Post(ComicDto comicDto)

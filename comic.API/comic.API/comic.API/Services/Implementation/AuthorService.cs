@@ -44,23 +44,70 @@ namespace comic.API.Services.Implementation
             }
         }
 
-        public async Task<List<AuthorDto>> Get()
+        public async Task<ResponseDataDto<AuthorDto>> Get(string search, int page = 1, int pageCount = 20)
         {
             _logger.LogInformation("Get Authors API");
+            var query = _dataContext.Authors.AsQueryable();
 
-            var authors = await _dataContext.Authors.Select(c =>
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Summary.Contains(search));
+            }
+
+            var count = await query.CountAsync();
+
+
+            if (page < 1) page = 1;
+            if (pageCount < 1) pageCount = 20;
+
+            var authors = await query.Select(c =>
             new AuthorDto
             {
                 Id = c.Id,
                 Name = c.Name,
                 Summary = c.Summary,
                 AvatarUrl = c.AvatarUrl,
-                Birthday = c.Birthday
+                Birthday = c.Birthday,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
             })
+                .Skip((page - 1) * pageCount)
+            .Take(pageCount)
             .ToListAsync();
             _logger.LogInformation("Get Authors Successfully");
 
-            return authors;
+            return new ResponseDataDto<AuthorDto>
+            {
+                Data = authors,
+                Pagination = new PaginationDto
+                {
+                    Page = page,
+                    PageCount = pageCount,
+                    TotalCount = count
+                }
+
+            };
+        }
+
+        public async Task<AuthorDto> GetById(string id)
+        {
+            _logger.LogInformation("GetById Author API");
+            var author = await _dataContext.FindAsync<Author>(new Guid(id));
+            if (author == null)
+            {
+                return null;
+            }
+            var authorDto = new AuthorDto
+            {
+                Id = author.Id,
+                Name = author.Name,
+                Summary = author.Summary,
+                CreatedDate = author.CreatedDate,
+                UpdatedDate = author.UpdatedDate,
+                AvatarUrl = author.AvatarUrl,
+                Birthday = author.Birthday,
+            };
+            return authorDto;
         }
 
         public async Task<AuthorDto> Post(AuthorDto authorDto)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace comic.API.DTOs
 {
-    public class ComicDto
+    public class ComicDto: AuditDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

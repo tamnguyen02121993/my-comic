@@ -43,6 +43,12 @@ namespace comic.API
             services.AddSwaggerGen();
 
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IAuthorService, AuthorService>();
+            services.AddScoped<IComicService, ComicService>();
+            services.AddScoped<IComicImageService, ComicImageService>();
+            services.AddScoped<IChapterService, ChapterService>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -44,52 +44,94 @@ namespace comic.API.Services.Implementation
             }
         }
 
-        public async Task<List<ComicImageDto>> Get()
+        public async Task<ResponseDataDto<ComicImageDto>> Get(string search, int page = 1, int pageCount = 20)
         {
             _logger.LogInformation("Get ComicImages API");
+            var query = _dataContext.ComicImages.AsQueryable();
 
-            var categories = await _dataContext.ComicImages.Select(c =>
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Url.Contains(search));
+            }
+
+            var count = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (pageCount < 1) pageCount = 20;
+            var comicImages = await query.Select(c =>
             new ComicImageDto
             {
                 Id = c.Id,
                 ChapterId = c.ChapterId,
                 Url = c.Url,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
             })
+            .Skip((page - 1) * pageCount)
+            .Take(pageCount)
             .ToListAsync();
             _logger.LogInformation("Get ComicImages Successfully");
 
-            return categories;
+            return new ResponseDataDto<ComicImageDto>
+            {
+                Data = comicImages,
+                Pagination = new PaginationDto
+                {
+                    Page = page,
+                    PageCount = pageCount,
+                    TotalCount = count
+                }
+
+            };
         }
 
-        public async Task<ComicImageDto> Post(ComicImageDto comicImageDto)
+        public async Task<ComicImageDto> GetById(string id)
+        {
+            _logger.LogInformation("GetById Comic Image API");
+            var image = await _dataContext.FindAsync<ComicImage>(new Guid(id));
+            if (image == null)
+            {
+                return null;
+            }
+            var imageDto = new ComicImageDto
+            {
+                Id = image.Id,
+                CreatedDate = image.CreatedDate,
+                UpdatedDate = image.UpdatedDate,
+                ChapterId = image.ChapterId,
+                Url = image.Url,
+            };
+            return imageDto;
+        }
+
+        public async Task<bool> Post(ComicImageDto comicImageDto)
         {
             _logger.LogInformation("Post ComicImage API");
 
             try
             {
-                var comicImage = new ComicImage
+                var urls = comicImageDto.Url.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                var links = urls.Select(x => new ComicImage
                 {
                     ChapterId = comicImageDto.ChapterId,
-                    Url = comicImageDto.Url,
+                    Url = x,
                     CreatedDate = DateTime.UtcNow,
                     UpdatedDate = DateTime.UtcNow,
-                };
-
-                await _dataContext.AddAsync(comicImage);
+                });
+                await _dataContext.AddRangeAsync(links);
                 await _dataContext.SaveChangesAsync();
-                comicImageDto.Id = comicImage.Id;
 
                 _logger.LogInformation("Post ComicImage Successfully");
-                return comicImageDto;
+                return true;
             }
             catch (Exception e)
             {
                 _logger.LogError("Post ComicImage Failure", e.Message);
-                return null;
+                return false;
             }
         }
 
-        public async Task<ComicImageDto> Put(ComicImageDto comicImageDto)
+        public async Task<bool> Put(ComicImageDto comicImageDto)
         {
             _logger.LogInformation("Put ComicImage API");
 
@@ -104,12 +146,12 @@ namespace comic.API.Services.Implementation
                 _dataContext.Update(comicImage);
                 await _dataContext.SaveChangesAsync();
                 _logger.LogInformation("Put ComicImage Successfully");
-                return comicImageDto;
+                return true;
             }
             catch (Exception e)
             {
                 _logger.LogError("Put ComicImage Failure", e.Message);
-                return null;
+                return false;
             }
         }
     }

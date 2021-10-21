@@ -6,12 +6,18 @@ import { store } from './app/store';
 import { Provider } from 'react-redux';
 import * as serviceWorker from './serviceWorker';
 import CssBaseline from '@mui/material/CssBaseline';
+import { BrowserRouter } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <CssBaseline />
-      <App />
+      <BrowserRouter>
+        <CssBaseline />
+        <App />
+        <ToastContainer theme="colored" />
+      </BrowserRouter>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')

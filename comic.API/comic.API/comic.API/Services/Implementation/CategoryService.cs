@@ -44,21 +44,66 @@ namespace comic.API.Services.Implementation
             }
         }
 
-        public async Task<List<CategoryDto>> Get()
+        public async Task<ResponseDataDto<CategoryDto>> Get(string search, int page = 1, int pageCount = 20)
         {
             _logger.LogInformation("Get Categories API");
 
-            var categories = await _dataContext.Categories.Select(c =>
+            var query = _dataContext.Categories.AsQueryable();
+
+            if(!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Description.Contains(search));
+            }
+
+            var count = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (pageCount < 1) pageCount = 20;
+
+            var categories = await query.Select(c =>
             new CategoryDto
             {
                 Id = c.Id,
                 Description = c.Description,
                 Name = c.Name,
+                CreatedDate = c.CreatedDate,
+                UpdatedDate = c.UpdatedDate
             })
+            .Skip((page - 1) * pageCount)
+            .Take(pageCount)
             .ToListAsync();
             _logger.LogInformation("Get Categories Successfully");
 
-            return categories;
+            return new ResponseDataDto<CategoryDto>
+            {
+                Data = categories,
+                Pagination = new PaginationDto
+                {
+                    Page = page,
+                    PageCount = pageCount,
+                    TotalCount = count
+                }
+
+            };
+        }
+
+        public async Task<CategoryDto> GetById(string id)
+        {
+            _logger.LogInformation("GetById Category API");
+            var category = await _dataContext.FindAsync<Category>(new Guid(id));
+            if (category == null)
+            {
+                return null;
+            }
+            var categoryDto = new CategoryDto
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+                CreatedDate = category.CreatedDate,
+                UpdatedDate = category.UpdatedDate
+            };
+            return categoryDto;
         }
 
         public async Task<CategoryDto> Post(CategoryDto categoryDto)

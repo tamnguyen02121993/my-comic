@@ -20,9 +20,16 @@ namespace comic.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<CategoryDto>>> Get()
+        public async Task<ActionResult<ResponseDataDto<CategoryDto>>> Get([FromQuery]string search, [FromQuery] int page, [FromQuery] int pageCount)
         {
-            return await _categoryService.Get();
+            return await _categoryService.Get(search, page, pageCount);
+        }
+
+        [Route("{id}")]
+        [HttpGet]
+        public async Task<ActionResult<CategoryDto>> GetById([FromRoute] string id)
+        {
+            return await _categoryService.GetById(id);
         }
 
         [HttpPost]

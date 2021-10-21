@@ -2,7 +2,7 @@
 
 namespace comic.API.DTOs
 {
-    public class ComicImageDto
+    public class ComicImageDto: AuditDto
     {
         public Guid Id { get; set; }
         public string Url { get; set; }
